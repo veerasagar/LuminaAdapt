@@ -2,3 +2,5 @@ numpy
 pillow
 pywin32
 pynput
+statsmodels
+scikit-learn
