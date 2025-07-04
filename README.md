@@ -1,4 +1,4 @@
-# BlueLightGuard Project Workflow
+# BlueLightGuard
 
 ## Execution
 
