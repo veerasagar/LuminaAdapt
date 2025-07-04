@@ -40,7 +40,7 @@ def make_gamma_ramp(temp_factor):
 # -------------------------------------------------------------------
 # 2. Screen‐sampling and logging
 # -------------------------------------------------------------------
-LOG_FILE = 'blue_light_log.csv'
+LOG_FILE = '../log/blue_light_log.csv'
 SAMPLE_INTERVAL = 60  # seconds
 
 # track user activity
