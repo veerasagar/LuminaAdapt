@@ -4,3 +4,6 @@ pywin32
 pynput
 statsmodels
 scikit-learn
+pandas
+matplotlib
+tk
