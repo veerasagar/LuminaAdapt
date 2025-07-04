@@ -2,9 +2,9 @@ numpy
 pillow
 pywin32
 pynput
-statsmodels
+statsmodels==0.13.5
 scikit-learn
 pandas
 matplotlib
 tk
-scipy==1.9.3
+scipy==1.10.1
