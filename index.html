@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌙 Adaptive Night Light Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-running { background: #48bb78; }
+        .status-stopped { background: #f56565; }
+        .status-unknown { background: #ed8936; }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 0;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            border-radius: 30px;
+            transition: 0.3s ease;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s ease;
+        }
+
+        input:checked + .slider {
+            background: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .temperature-control {
+            margin: 20px 0;
+        }
+
+        .temperature-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            background: linear-gradient(90deg, #ff6b6b 0%, #feca57 25%, #48dbfb 50%, #0abde3 100%);
+            margin: 15px 0;
+            cursor: pointer;
+        }
+
+        .temperature-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .temperature-display {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .temperature-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .button.danger:hover {
+            box-shadow: 0 6px 20px rgba(245, 101, 101, 0.6);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .progress-ring {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform-origin: center;
+            transform: rotate(-90deg);
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-ring .background {
+            stroke: #e2e8f0;
+        }
+
+        .progress-ring .progress {
+            stroke: url(#gradient);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert.error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+
+        .alert.success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border: 1px solid #9ae6b4;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌙LuminaAdapta</h1>
+            <p>Automatically adjusts your screen temperature based on content analysis</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div class="dashboard">
+            <!-- Control Panel -->
+            <div class="card">
+                <h2>🎛️ Control Panel</h2>
+                
+                <div class="control-section">
+                    <div class="control-row">
+                        <span class="control-label">System Status</span>
+                        <span id="system-status">Unknown<span class="status-indicator status-unknown"></span></span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <span class="control-label">Night Light</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="night-light-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="temperature-control">
+                    <div class="control-label" style="margin-bottom: 10px;">Color Temperature</div>
+                    <div class="temperature-display" id="temperature-display">4000K</div>
+                    <input type="range" id="temperature-slider" class="temperature-slider" 
+                           min="2000" max="6500" value="4000" step="100">
+                    <div class="temperature-labels">
+                        <span>🔥 Warm (2000K)</span>
+                        <span>⚪ Neutral</span>
+                        <span>❄️ Cool (6500K)</span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="button" id="start-btn">▶️ Start Monitoring</button>
+                    <button class="button danger" id="stop-btn">⏹️ Stop Monitoring</button>
+                </div>
+            </div>
+
+            <!-- System Metrics -->
+            <div class="card">
+                <h2>📊 Screen Analysis</h2>
+                
+                <svg class="progress-ring" viewBox="0 0 120 120">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea"/>
+                            <stop offset="100%" style="stop-color:#764ba2"/>
+                        </linearGradient>
+                    </defs>
+                    <circle class="background" cx="60" cy="60" r="54"/>
+                    <circle class="progress" cx="60" cy="60" r="54" 
+                            stroke-dasharray="339.292" stroke-dashoffset="339.292" id="brightness-ring"/>
+                    <text x="60" y="65" text-anchor="middle" font-size="16" font-weight="bold" fill="#4a5568" id="brightness-text">0%</text>
+                </svg>
+
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-value" id="brightness-value">-</div>
+                        <div class="metric-label">Brightness</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="blue-intensity-value">-</div>
+                        <div class="metric-label">Blue Light</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="ambient-light-value">-</div>
+                        <div class="metric-label">Ambient Light</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="frames-processed">0</div>
+                        <div class="metric-label">Frames</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class NightLightController {
+            constructor() {
+                this.baseURL = 'http://localhost:8080';
+                this.updateInterval = null;
+                this.isUpdating = false;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.startPeriodicUpdates();
+                this.loadInitialState();
+            }
+
+            bindEvents() {
+                // Night light toggle
+                document.getElementById('night-light-toggle').addEventListener('change', (e) => {
+                    this.updateConfig({ enabled: e.target.checked });
+                });
+
+                // Temperature slider
+                document.getElementById('temperature-slider').addEventListener('input', (e) => {
+                    this.updateTemperatureDisplay(e.target.value);
+                });
+
+                document.getElementById('temperature-slider').addEventListener('change', (e) => {
+                    this.updateConfig({ temperature: parseInt(e.target.value) });
+                });
+
+                // Control buttons
+                document.getElementById('start-btn').addEventListener('click', () => this.startMonitoring());
+                document.getElementById('stop-btn').addEventListener('click', () => this.stopMonitoring());
+            }
+
+            async makeRequest(endpoint, options = {}) {
+                try {
+                    const response = await fetch(`${this.baseURL}${endpoint}`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...options.headers
+                        },
+                        ...options
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API Error:', error);
+                    this.showAlert(`API Error: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+
+            async loadInitialState() {
+                try {
+                    const [config, status] = await Promise.all([
+                        this.makeRequest('/config'),
+                        this.makeRequest('/status')
+                    ]);
+                    
+                    this.updateUI({ config, status });
+                } catch (error) {
+                    console.error('Failed to load initial state:', error);
+                }
+            }
+
+            async updateConfig(changes) {
+                if (this.isUpdating) return;
+                this.isUpdating = true;
+
+                try {
+                    const config = await this.makeRequest('/config', {
+                        method: 'PUT',
+                        body: JSON.stringify(changes)
+                    });
+                    
+                    this.showAlert('Configuration updated successfully!', 'success');
+                    this.updateConfigUI(config);
+                } catch (error) {
+                    console.error('Failed to update config:', error);
+                } finally {
+                    this.isUpdating = false;
+                }
+            }
+
+            async startMonitoring() {
+                const startBtn = document.getElementById('start-btn');
+                const originalText = startBtn.textContent;
+                
+                startBtn.innerHTML = '<span class="loading"></span> Starting...';
+                startBtn.disabled = true;
+
+                try {
+                    await this.makeRequest('/start', { method: 'POST' });
+                    this.showAlert('Screen monitoring started!', 'success');
+                } catch (error) {
+                    console.error('Failed to start monitoring:', error);
+                } finally {
+                    startBtn.textContent = originalText;
+                    startBtn.disabled = false;
+                }
+            }
+
+            async stopMonitoring() {
+                const stopBtn = document.getElementById('stop-btn');
+                const originalText = stopBtn.textContent;
+                
+                stopBtn.innerHTML = '<span class="loading"></span> Stopping...';
+                stopBtn.disabled = true;
+
+                try {
+                    await this.makeRequest('/stop', { method: 'POST' });
+                    this.showAlert('Screen monitoring stopped!', 'success');
+                } catch (error) {
+                    console.error('Failed to stop monitoring:', error);
+                } finally {
+                    stopBtn.textContent = originalText;
+                    stopBtn.disabled = false;
+                }
+            }
+
+            async updateStatus() {
+                try {
+                    const [config, status] = await Promise.all([
+                        this.makeRequest('/config'),
+                        this.makeRequest('/status')
+                    ]);
+                    
+                    this.updateUI({ config, status });
+                } catch (error) {
+                    console.error('Failed to update status:', error);
+                }
+            }
+
+            updateUI({ config, status }) {
+                this.updateConfigUI(config);
+                this.updateStatusUI(status);
+            }
+
+            updateConfigUI(config) {
+                if (!this.isUpdating) {
+                    document.getElementById('night-light-toggle').checked = config.enabled;
+                    document.getElementById('temperature-slider').value = config.temperature;
+                    this.updateTemperatureDisplay(config.temperature);
+                }
+            }
+
+            updateStatusUI(status) {
+                // System status
+                const statusElement = document.getElementById('system-status');
+                const indicator = statusElement.querySelector('.status-indicator');
+                
+                if (status.running) {
+                    statusElement.innerHTML = 'Running <span class="status-indicator status-running"></span>';
+                } else {
+                    statusElement.innerHTML = 'Stopped <span class="status-indicator status-stopped"></span>';
+                }
+
+                // Frames processed
+                document.getElementById('frames-processed').textContent = status.frames_processed;
+
+                // Analysis data
+                if (status.current_analysis) {
+                    const analysis = status.current_analysis;
+                    
+                    // Brightness
+                    const brightnessPercent = (analysis.average_brightness / 255 * 100).toFixed(1);
+                    document.getElementById('brightness-value').textContent = `${brightnessPercent}%`;
+                    document.getElementById('brightness-text').textContent = `${brightnessPercent}%`;
+                    
+                    // Update progress ring
+                    const ring = document.getElementById('brightness-ring');
+                    const circumference = 339.292;
+                    const offset = circumference - (brightnessPercent / 100) * circumference;
+                    ring.style.strokeDashoffset = offset;
+
+                    // Blue intensity
+                    const bluePercent = (analysis.blue_intensity / 255 * 100).toFixed(1);
+                    document.getElementById('blue-intensity-value').textContent = `${bluePercent}%`;
+
+                    // Ambient light
+                    const ambientPercent = (analysis.ambient_light_level * 100).toFixed(1);
+                    document.getElementById('ambient-light-value').textContent = `${ambientPercent}%`;
+                } else {
+                    // No analysis data
+                    document.getElementById('brightness-value').textContent = '-';
+                    document.getElementById('brightness-text').textContent = '0%';
+                    document.getElementById('blue-intensity-value').textContent = '-';
+                    document.getElementById('ambient-light-value').textContent = '-';
+                    
+                    const ring = document.getElementById('brightness-ring');
+                    ring.style.strokeDashoffset = '339.292';
+                }
+            }
+
+            updateTemperatureDisplay(temperature) {
+                const display = document.getElementById('temperature-display');
+                display.textContent = `${temperature}K`;
+                
+                // Update color based on temperature
+                const hue = Math.max(0, Math.min(60, (temperature - 2000) / 4500 * 60));
+                display.style.color = `hsl(${hue}, 70%, 50%)`;
+            }
+
+            showAlert(message, type = 'success') {
+                const container = document.getElementById('alert-container');
+                const alert = document.createElement('div');
+                alert.className = `alert ${type}`;
+                alert.textContent = message;
+                
+                container.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 5000);
+            }
+
+            startPeriodicUpdates() {
+                this.updateInterval = setInterval(() => {
+                    this.updateStatus();
+                }, 2000); // Update every 2 seconds
+            }
+
+            stopPeriodicUpdates() {
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                    this.updateInterval = null;
+                }
+            }
+        }
+
+        // Initialize the controller when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new NightLightController();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.controller) {
+                window.controller.stopPeriodicUpdates();
+            }
+        });
+    </script>
+</body>
+</html>
