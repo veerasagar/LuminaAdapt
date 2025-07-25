@@ -12,7 +12,7 @@ SERVER_PID=$!
 sleep 2
 
 # 4. URL where your index.html is served
-URL="http://localhost:8080/index.html"
+URL="index.html"
 
 # 5. Open the URL in the default browser
 if command -v xdg-open >/dev/null 2>&1; then
