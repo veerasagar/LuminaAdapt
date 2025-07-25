@@ -16,3 +16,5 @@ or
 ```shell
 ./run.sh
 ```
+
+![Alt text](https://github.com/veerasagar/LuminaAdapt/blob/main/docs/img.jpg)
